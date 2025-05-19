@@ -4,7 +4,7 @@
 
 适用于 `XYZ` 平台的 `Agent To Agent Protocol` 协议封装.
 
-它使用了非标的 `A2A` 协议实现, 来支持多个 `Agent` 仅仅通过 1 个 `Server` 就具有支持 `A2A` 协议的能力.
+它使用了非标的 `A2A` 协议实现, 来实现多个 `Agent` 仅仅通过 1 个 `Server` 就具有支持 `A2A` 协议的能力.
 
 ## 安装
 
