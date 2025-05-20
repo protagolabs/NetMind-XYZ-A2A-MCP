@@ -27,7 +27,7 @@ uv pip install -e ./deps/multi-agent-centre
 使用 `wsgi` 运行服务:
 
 ```bash
-gunicorn -w4 -b 0.0.0.0:5000 wsgi:app
+gunicorn -w1 -b 0.0.0.0:5000 main:app
 ```
 
 `mcp_server` 也需要启动.

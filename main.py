@@ -1,4 +1,5 @@
 import logging
+import threading
 
 from google.protobuf.json_format import MessageToDict
 
@@ -10,6 +11,7 @@ from core.a2a.server import (
 )
 from core.libs.rpc import RpcManager
 from core.models import MakeResponseModel
+from mcp_server import mcp
 
 
 class XyzA2AServer(BaseXyzA2AServer):
@@ -60,5 +62,5 @@ class XyzA2AServer(BaseXyzA2AServer):
 
 app = XyzA2AServer().load_app()
 
-if __name__ == "__main__":
-    app.run()
+
+threading.Thread(target=mcp.run, args=("sse",)).start()
