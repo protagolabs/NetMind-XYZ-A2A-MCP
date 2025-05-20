@@ -1,27 +1,27 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: xyz_a2a_mcp
+  name: xyz-a2a-mcp
   namespace: xyz
   labels:
-    app: xyz_a2a_mcp
+    app: xyz-a2a-mcp
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: xyz_a2a_mcp
+      app: xyz-a2a-mcp
   template:
     metadata:
-      name: xyz_a2a_mcp
+      name: xyz-a2a-mcp
       labels:
-        app: xyz_a2a_mcp
+        app: xyz-a2a-mcp
       annotations:
         prometheus.io/scrape: "true"
         fluentd.io/log: "true"
     spec:
       containers:
-        - name: xyz_a2a_mcp
-          image: 891377017161.dkr.ecr.eu-west-2.amazonaws.com/xyz_a2a_mcp:${GIT_COMMIT_ID}
+        - name: xyz-a2a-mcp
+          image: 891377017161.dkr.ecr.eu-west-2.amazonaws.com/xyz-a2a-mcp:${GIT_COMMIT_ID}
           ports:
             - containerPort: 10254
               protocol: TCP
@@ -60,12 +60,12 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: xyz_a2a_mcp-service
+  name: xyz-a2a-mcp-service
 spec:
   selector:
-    app: xyz_a2a_mcp
+    app: xyz-a2a-mcp
   ports:
-  - name: xyz_a2a_mcp-port-10254
+  - name: xyz-a2a-mcp-port-10254
     protocol: TCP
     port: 10254
     targetPort: 10254
