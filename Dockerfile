@@ -28,7 +28,7 @@ RUN pip install -e /app/xyz-databases
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
 # 暴露端口（根据config中的配置）
-EXPOSE 10253
+EXPOSE 10254
 
 # 启动命令
 CMD ["python3", "main.py"]
