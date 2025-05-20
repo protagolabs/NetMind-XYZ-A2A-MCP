@@ -1,3 +1,4 @@
+import logging
 from python_a2a import (
     A2AClient as StandardClient,
     StreamingClient,
@@ -44,9 +45,8 @@ class A2AClient:
                 else:
                     streaming_text += str(chunk)
 
-                print(streaming_text, end="\r", flush=True)
-
         except Exception as exc:
-            pass
+            logging.error(f"收集流式信息错误: {str(exc)}")
+            raise exc
 
         return streaming_text
