@@ -57,9 +57,7 @@ markupsafe==3.0.2
 mcp==1.9.0
 mdurl==0.1.2
 milvus-lite==2.4.12
--e file:///Users/askfiy/project/xyz/XYZ-A2A/deps/multi-agent-centre
 multidict==6.4.3
--e file:///Users/askfiy/project/xyz/XYZ-A2A/deps/MXYZ-Agent-Core
 mypy==1.15.0
 mypy-extensions==1.1.0
 numpy==2.2.6
@@ -124,6 +122,5 @@ urllib3==2.4.0
 uvicorn==0.34.2
 websockets==15.0.1
 werkzeug==3.1.3
--e file:///Users/askfiy/project/xyz/XYZ-A2A/deps/xyz-databases
 yarl==1.20.0
 zstandard==0.23.0
