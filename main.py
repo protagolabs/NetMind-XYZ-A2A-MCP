@@ -11,8 +11,6 @@ from core.a2a.server import (
 from core.libs.rpc import RpcManager
 from core.models import MakeResponseModel
 
-logging.basicConfig(level=logging.INFO)
-
 
 class XyzA2AServer(BaseXyzA2AServer):
     async def xyz_get_agent_card(self, agent_id: int):
@@ -33,15 +31,10 @@ class XyzA2AServer(BaseXyzA2AServer):
     async def xyz_stream_response(
         self, agent_id: int, message: Message
     ) -> AsyncGenerator[str, None]:
-        logging.info(f"收到发送给 {agent_id} 的信息 {message}")
-
         model = MakeResponseModel.model_validate_json(json_data=message.content.text)
-
-        print(f"模型: {model}")
+        logging.info(f"收到来自 {model.user_id} 发送给 {agent_id} 的信息 {message}")
 
         agent = await RpcManager.get_agent_client(agent_id=agent_id)
-
-        print("发送了")
 
         try:
             async for msg in agent.run_message_streaming(
@@ -58,7 +51,7 @@ class XyzA2AServer(BaseXyzA2AServer):
                     yield content
 
         except Exception as exc:
-            logging.error(exc)
+            logging.error(f"生成回复时错误: {exc}")
             raise exc
 
     async def xyz_handle_message(self, agent_id: int, message: Message) -> Message:

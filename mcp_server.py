@@ -2,14 +2,13 @@ import re
 import os
 import httpx
 import time
-from mcp.server.fastmcp import FastMCP
+import logging
+from typing import Optional
+from fastmcp import FastMCP
 from urllib.parse import urlparse
 
-from typing import Optional
 from core.a2a.client import A2AClient, MakeResponseModel
-from tester.memory import RedisMemoryManager
-
-short_term_memory_manager = RedisMemoryManager()
+from core.server import xyz_server
 
 
 A2A_SERVER_URL = os.getenv("A2A_SERVER_URL", "http://127.0.0.1:5000")
@@ -71,7 +70,7 @@ async def call_agent(
     """
     client = A2AClient(url=url)
 
-    print(f"""
+    logging.info(f"""
           调用 A2AClient call_agent 工具, 参数;
               - urL: {url}
               - form_agent_id: {from_agent_id}
@@ -80,8 +79,8 @@ async def call_agent(
 
     path = urlparse(url).path  # /1036
 
-    message_list = await short_term_memory_manager.get_memory(
-        user_id=str(from_agent_id), agent_id=str(to_agent_id)
+    message_list = await xyz_server.conversation_read(
+        user_id=from_agent_id, agent_id=to_agent_id
     )
 
     rest_message = {
@@ -92,8 +91,6 @@ async def call_agent(
 
     message_list.append(rest_message)
 
-    print(f"发送消息: {rest_message}")
-
     if re.match(r"^/\d+$", path):
         # 内部 Agent-Server 发送方式
         model = MakeResponseModel(
@@ -102,30 +99,22 @@ async def call_agent(
             mcp_info_list=[],
             other_data=None,
         )
-        print("已经成功通过内部方式发送")
         response = await client.send_stream_message(model)
     else:
-        print("已经成功通过外部方式发送")
         response = await client.send_message(message)
 
-    resp_message = {
-        "role": {
-            "type": "assistant",
-            "id": to_agent_id,
-            "name": "Default Agent",
-        },
-        "content": response,
-        "metadata": {"time": time.time()},
-    }
-
-    print(f"收到消息: {resp_message}")
-
     # 缓存历史记录
-    await short_term_memory_manager.add_to_memory(
-        from_agent_id, to_agent_id, rest_message
+    await xyz_server.conversation_write(
+        user_id=from_agent_id,
+        agent_id=to_agent_id,
+        message=message,
+        role="user",
     )
-    await short_term_memory_manager.add_to_memory(
-        from_agent_id, to_agent_id, resp_message
+    await xyz_server.conversation_write(
+        user_id=from_agent_id,
+        agent_id=to_agent_id,
+        message=response,
+        role="assistant",
     )
 
     return f"Agent {to_agent_id} said: {response}"

@@ -1,11 +1,7 @@
-import weakref
-from typing import Optional
-
 from multi_agent_centre.client.agent import AgentClient
-from core.env_helper import EnvHelper
-from core.server.xyz_platform import XyzPlatformServer
 
-xyz_server = XyzPlatformServer()
+from core.env_helper import EnvHelper
+from core.server import xyz_server
 
 
 class RpcManager:
