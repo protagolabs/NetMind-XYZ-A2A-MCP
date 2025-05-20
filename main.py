@@ -62,5 +62,4 @@ class XyzA2AServer(BaseXyzA2AServer):
 
 app = XyzA2AServer().load_app()
 
-
 threading.Thread(target=mcp.run, args=("sse",)).start()
