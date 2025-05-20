@@ -146,10 +146,10 @@ async def call_agent(
             other_data=None,
         )
         # XYZ 平台使用 stream 发送信息
-        response = await client.send_stream_message(send_message)
+        response = await client.send_stream_message(send_message.model_dump_json())
     else:
         # 外部服务使用常规方式发送信息
-        response = await client.send_message(message)
+        response = await client.send_message(send_message.model_dump_json())
 
     # 缓存历史记录
     await xyz_server.conversation_write(

@@ -7,8 +7,6 @@ from python_a2a import (
     TextContent,
 )
 
-from core.models import MakeResponseModel
-
 
 class A2AClient:
     def __init__(self, url: str):
@@ -18,20 +16,13 @@ class A2AClient:
     def send_message(self, message: str) -> str:
         return self.standard_client.send_message(message)
 
-    async def send_stream_message(
-        self, model_or_string: MakeResponseModel | str
-    ) -> str:
+    async def send_stream_message(self, message: str | str) -> str:
         streaming_text = ""
 
-        if isinstance(model_or_string, MakeResponseModel):
-            message = Message(
-                content=TextContent(text=model_or_string.model_dump_json()),
-                role=MessageRole.USER,
-            )
-        else:
-            message = Message(
-                content=TextContent(text=model_or_string), role=MessageRole.USER
-            )
+        message = Message(
+            content=TextContent(text=message),
+            role=MessageRole.USER,
+        )
 
         try:
             async for chunk in self.streaming_client.stream_response(message):
