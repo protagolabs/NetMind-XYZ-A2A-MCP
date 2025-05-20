@@ -31,4 +31,4 @@ RUN pip install --no-cache-dir -r /app/requirements.txt
 EXPOSE 10254
 
 # 启动命令
-CMD ["python3", "main.py"]
+CMD ["gunicorn -w1 -b 0.0.0.0:5000 main:app"]
