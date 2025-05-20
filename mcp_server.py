@@ -10,7 +10,8 @@ from urllib.parse import urlparse
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 
-from core.a2a.client import A2AClient, MakeResponseModel
+from core.a2a.client import A2AClient
+from core.models import MakeResponseModel
 from core.server import xyz_server
 from core.env_helper import EnvHelper
 
