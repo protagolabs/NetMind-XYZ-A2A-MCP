@@ -16,6 +16,7 @@ RUN apt-get update \
         python3-dev \
         default-libmysqlclient-dev \
         pkg-config \
+        ncat \
     && rm -rf /var/lib/apt/lists/*
 
 # 复制项目文件
