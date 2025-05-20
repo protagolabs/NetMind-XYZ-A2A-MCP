@@ -29,10 +29,10 @@ async def health_check(request: Request) -> Response:
 @mcp.tool()
 async def get_agent_card_by_url(url: str):
     """
-    Get AgentCard via BASE_URL.
+    Get AgentCard via url.
 
     Args:
-        url (str): Agent Server base url.
+        url (str): get Agent Server agentCard Url.
 
     Returns:
         dict: A dictionary containing the agent's metadata and capabilities.
@@ -57,10 +57,16 @@ async def get_agent_card_by_url(url: str):
         }
 
     """
-    async with httpx.AsyncClient(timeout=EnvHelper.get_http_timeout()) as client:
-        agent_server_url = f"{url}/.well-known.json"
-        response = await client.get(agent_server_url)
-        return response.json()
+
+    try:
+        async with httpx.AsyncClient(timeout=EnvHelper.get_http_timeout()) as client:
+            response = await client.get(url)
+            return response.json()
+    except Exception as exc:
+        return {
+            "err": str(exc),
+            "message": "Failed to request AgentCard, possibly due to incorrect URL or Agent Serve service problem. Please confirm",
+        }
 
 
 @mcp.tool()
