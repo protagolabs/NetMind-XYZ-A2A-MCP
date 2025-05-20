@@ -26,7 +26,44 @@ async def health_check(request: Request) -> Response:
 
 
 @mcp.tool()
-async def get_agent_card(agent_id: int):
+async def get_agent_card_by_url(url: str):
+    """
+    Get AgentCard via BASE_URL.
+
+    Args:
+        url (str): Agent Server base url.
+
+    Returns:
+        dict: A dictionary containing the agent's metadata and capabilities.
+
+    Example Response:
+
+        {
+          "name": "XyzAgent: 1036",
+          "version": "1.0.0",
+          "url": "http://127.0.0.1:5000/1036",
+          "capabilities": {
+            "streaming": true
+          },
+          "defaultInputModes": [
+            "text/plain"
+          ],
+          "defaultOutputModes": [
+            "text/plain"
+          ],
+          "skills": [],
+          "description": "Agent description..."
+        }
+
+    """
+    async with httpx.AsyncClient(timeout=EnvHelper.get_http_timeout()) as client:
+        agent_server_url = f"{url}/.well-known.json"
+        response = await client.get(agent_server_url)
+        return response.json()
+
+
+@mcp.tool()
+async def get_agent_card_by_agent_id(agent_id: int):
     """
     Retrieves the IdCard (AgentCard) for a specified agent.
 
@@ -57,8 +94,8 @@ async def get_agent_card(agent_id: int):
 
     """
     async with httpx.AsyncClient(timeout=EnvHelper.get_http_timeout()) as client:
-        a2a_agent_url = f"{A2A_SERVER_URL}/.well-known.json"
-        response = await client.get(a2a_agent_url, params={"agent_id": agent_id})
+        agent_server_url = f"{A2A_SERVER_URL}/.well-known.json"
+        response = await client.get(agent_server_url, params={"agent_id": agent_id})
         return response.json()
 
 
