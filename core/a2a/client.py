@@ -1,3 +1,4 @@
+import logging
 from python_a2a import (
     A2AClient as StandardClient,
     StreamingClient,
@@ -5,8 +6,6 @@ from python_a2a import (
     MessageRole,
     TextContent,
 )
-
-from core.models import MakeResponseModel
 
 
 class A2AClient:
@@ -17,20 +16,13 @@ class A2AClient:
     def send_message(self, message: str) -> str:
         return self.standard_client.send_message(message)
 
-    async def send_stream_message(
-        self, model_or_string: MakeResponseModel | str
-    ) -> str:
+    async def send_stream_message(self, message: str | str) -> str:
         streaming_text = ""
 
-        if isinstance(model_or_string, MakeResponseModel):
-            message = Message(
-                content=TextContent(text=model_or_string.model_dump_json()),
-                role=MessageRole.USER,
-            )
-        else:
-            message = Message(
-                content=TextContent(text=model_or_string), role=MessageRole.USER
-            )
+        message = Message(
+            content=TextContent(text=message),
+            role=MessageRole.USER,
+        )
 
         try:
             async for chunk in self.streaming_client.stream_response(message):
@@ -44,9 +36,8 @@ class A2AClient:
                 else:
                     streaming_text += str(chunk)
 
-                print(streaming_text, end="\r", flush=True)
-
         except Exception as exc:
-            pass
+            logging.error(f"收集流式信息错误: {str(exc)}")
+            raise exc
 
         return streaming_text

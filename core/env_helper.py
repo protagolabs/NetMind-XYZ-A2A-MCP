@@ -49,7 +49,7 @@ class EnvHelper:
 
     @classmethod
     def get_mcp_server_port(cls) -> str:
-        port = os.getenv("MCP_SERVER_PORT", 10253)
+        port = os.getenv("MCP_SERVER_PORT", 10254)
 
         if isinstance(port, str):
             port = int(port)

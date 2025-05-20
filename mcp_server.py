@@ -10,7 +10,8 @@ from urllib.parse import urlparse
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 
-from core.a2a.client import A2AClient, MakeResponseModel
+from core.a2a.client import A2AClient
+from core.models import MakeResponseModel
 from core.server import xyz_server
 from core.env_helper import EnvHelper
 
@@ -26,7 +27,50 @@ async def health_check(request: Request) -> Response:
 
 
 @mcp.tool()
-async def get_agent_card(agent_id: int):
+async def get_agent_card_by_url(url: str):
+    """
+    Get AgentCard via url.
+
+    Args:
+        url (str): get Agent Server agentCard Url.
+
+    Returns:
+        dict: A dictionary containing the agent's metadata and capabilities.
+
+    Example Response:
+
+        {
+          "name": "XyzAgent: 1036",
+          "version": "1.0.0",
+          "url": "http://127.0.0.1:5000/1036",
+          "capabilities": {
+            "streaming": true
+          },
+          "defaultInputModes": [
+            "text/plain"
+          ],
+          "defaultOutputModes": [
+            "text/plain"
+          ],
+          "skills": [],
+          "description": "Agent description..."
+        }
+
+    """
+
+    try:
+        async with httpx.AsyncClient(timeout=EnvHelper.get_http_timeout()) as client:
+            response = await client.get(url)
+            return response.json()
+    except Exception as exc:
+        return {
+            "err": str(exc),
+            "message": "Failed to request AgentCard, possibly due to incorrect URL or Agent Serve service problem. Please confirm",
+        }
+
+
+@mcp.tool()
+async def get_agent_card_by_agent_id(agent_id: int):
     """
     Retrieves the IdCard (AgentCard) for a specified agent.
 
@@ -109,10 +153,10 @@ async def call_agent(
             other_data=None,
         )
         # XYZ 平台使用 stream 发送信息
-        response = await client.send_stream_message(send_message)
+        response = await client.send_stream_message(send_message.model_dump_json())
     else:
         # 外部服务使用常规方式发送信息
-        response = await client.send_message(message)
+        response = await client.send_message(send_message.model_dump_json())
 
     # 缓存历史记录
     await xyz_server.conversation_write(
