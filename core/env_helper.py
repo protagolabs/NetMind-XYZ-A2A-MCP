@@ -55,3 +55,12 @@ class EnvHelper:
             port = int(port)
 
         return port
+
+    @classmethod
+    def get_http_timeout(cls) -> int:
+        timeout = os.getenv("HTTP_TIMEOUT", 30)
+
+        if isinstance(timeout, str):
+            timeout = int(timeout)
+
+        return timeout

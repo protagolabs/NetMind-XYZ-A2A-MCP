@@ -56,7 +56,7 @@ async def get_agent_card(agent_id: int):
         }
 
     """
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=EnvHelper.get_http_timeout()) as client:
         a2a_agent_url = f"{A2A_SERVER_URL}/.well-known.json"
         response = await client.get(a2a_agent_url, params={"agent_id": agent_id})
         return response.json()
