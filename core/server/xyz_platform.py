@@ -37,7 +37,8 @@ class XyzPlatformServer:
     async def get_model_info(self, agent_id: int):
         path = "/agents/model/info"
         async with aiohttp.ClientSession(
-            base_url=self.base_url, timeout=aiohttp.ClientTimeout(30)
+            base_url=self.base_url,
+            timeout=aiohttp.ClientTimeout(EnvHelper.get_http_timeout()),
         ) as client:
             async with client.get(url=path, params={"agent_id": agent_id}) as response:
                 return await self.parser_reponse(path, response)
@@ -46,7 +47,8 @@ class XyzPlatformServer:
         path = "/conversation/read"
 
         async with aiohttp.ClientSession(
-            base_url=self.base_url, timeout=aiohttp.ClientTimeout(30)
+            base_url=self.base_url,
+            timeout=aiohttp.ClientTimeout(EnvHelper.get_http_timeout()),
         ) as client:
             async with client.get(
                 url=path, params={"agent_id": agent_id, "user_id": user_id}
@@ -59,7 +61,8 @@ class XyzPlatformServer:
         path = "/conversation/write"
 
         async with aiohttp.ClientSession(
-            base_url=self.base_url, timeout=aiohttp.ClientTimeout(30)
+            base_url=self.base_url,
+            timeout=aiohttp.ClientTimeout(EnvHelper.get_http_timeout()),
         ) as client:
             async with client.post(
                 url=path,
