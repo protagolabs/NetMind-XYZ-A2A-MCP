@@ -838,7 +838,6 @@ class BaseXyzA2AServer(A2AServer):
             return jsonify(metadata)
 
         @app.route("/a2a/health", methods=["GET"])
-        @app.route("/<int:agent_id>/a2a/health", methods=["GET"])
         def health_check() -> Response:
             """Health check endpoint"""
             return jsonify({"status": "ok"})
@@ -848,5 +847,3 @@ class BaseXyzA2AServer(A2AServer):
     def start(self):
         app = self.load_app()
         app.run(host=self.host, port=self.port, debug=self.debug)
-
-

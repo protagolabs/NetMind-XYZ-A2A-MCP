@@ -7,13 +7,22 @@ from typing import Optional
 from fastmcp import FastMCP
 from urllib.parse import urlparse
 
+from starlette.requests import Request
+from starlette.responses import JSONResponse, Response
+
 from core.a2a.client import A2AClient, MakeResponseModel
 from core.server import xyz_server
+from core.env_helper import EnvHelper
 
 
 A2A_SERVER_URL = os.getenv("A2A_SERVER_URL", "http://127.0.0.1:5000")
 
-mcp = FastMCP()
+mcp = FastMCP("A2A-Client", host="0.0.0.0", port=EnvHelper.get_mcp_server_port())
+
+
+@mcp.custom_route("/health", methods=["GET"])
+async def health_check(request: Request) -> Response:
+    return JSONResponse({"status": "ok"})
 
 
 @mcp.tool()
@@ -93,14 +102,16 @@ async def call_agent(
 
     if re.match(r"^/\d+$", path):
         # 内部 Agent-Server 发送方式
-        model = MakeResponseModel(
+        send_message = MakeResponseModel(
             messages_list=message_list,
             user_id=str(from_agent_id),
             mcp_info_list=[],
             other_data=None,
         )
-        response = await client.send_stream_message(model)
+        # XYZ 平台使用 stream 发送信息
+        response = await client.send_stream_message(send_message)
     else:
+        # 外部服务使用常规方式发送信息
         response = await client.send_message(message)
 
     # 缓存历史记录

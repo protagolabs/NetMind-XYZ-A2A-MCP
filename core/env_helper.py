@@ -46,3 +46,12 @@ class EnvHelper:
     def get_xyz_platform_url(cls) -> str:
         url = os.getenv("XYZ_PLATFORM_URL", "http://127.0.0.1:8100")
         return url
+
+    @classmethod
+    def get_mcp_server_port(cls) -> str:
+        port = os.getenv("MCP_SERVER_PORT", 10253)
+
+        if isinstance(port, str):
+            port = int(port)
+
+        return port

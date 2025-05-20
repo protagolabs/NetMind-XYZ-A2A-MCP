@@ -10,7 +10,7 @@
 
 使用 `uv`:
 
-```
+```bash
 cd deps
 git clone git@github.com:protagolabs/MXYZ-Agent-Core.git
 git clone git@github.com:protagolabs/xyz-databases.git
@@ -21,3 +21,13 @@ uv pip install -e ./deps/MXYZ-Agent-Core
 uv pip install -e ./deps/xyz-databases
 uv pip install -e ./deps/multi-agent-centre
 ```
+
+## 部署
+
+使用 `wsgi` 运行服务:
+
+```bash
+gunicorn -w4 -b 0.0.0.0:5000 wsgi:app
+```
+
+`mcp_server` 也需要启动.
