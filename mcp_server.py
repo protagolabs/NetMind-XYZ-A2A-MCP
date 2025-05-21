@@ -8,6 +8,7 @@ from fastmcp import FastMCP
 from urllib.parse import urlparse
 
 import httpx
+from pydantic import Field
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 
@@ -40,12 +41,12 @@ async def health_check(request: Request) -> Response:
 
 
 @mcp.tool()
-async def get_agent_card_by_url(url: str):
+async def get_agent_card_by_url(url: str = Field(description="Agent Server URL")):
     """
-    Get AgentCard via url.
+    Get AgentCard by server base url.
 
     Args:
-        url (str): get Agent Server agentCard Url.
+        url (str): Agent-serve url.
 
     Returns:
         dict: A dictionary containing the agent's metadata and capabilities.
@@ -69,11 +70,19 @@ async def get_agent_card_by_url(url: str):
           "description": "Agent description..."
         }
 
+    Important:
+        - URL only supports BASE_URL, such as http://127.0.0.1:8000 or http://127.0.0.1:8000/
+        - If the URL has a path part, you should call `get_agent_card_by_agent_id` to get the AgentCard instead of this tool
     """
 
     try:
         async with httpx.AsyncClient(timeout=EnvHelper.get_http_timeout()) as client:
-            response = await client.get(url)
+            if not url.endswith("/"):
+                agent_server_url = f"{url}/.well-known.json"
+            else:
+                agent_server_url = f"{url}.well-known.json"
+
+            response = await client.get(agent_server_url)
             return response.json()
     except Exception as exc:
         return {
@@ -83,7 +92,11 @@ async def get_agent_card_by_url(url: str):
 
 
 @mcp.tool()
-async def get_agent_card_by_agent_id(agent_id: int):
+async def get_agent_card_by_agent_id(
+    agent_id: int = Field(
+        description="AgentCard Unique identifier of the person to whom it belongs"
+    ),
+):
     """
     Retrieves the IdCard (AgentCard) for a specified agent.
 
@@ -121,7 +134,15 @@ async def get_agent_card_by_agent_id(agent_id: int):
 
 @mcp.tool()
 async def call_agent(
-    url: str, from_agent_id: int, message: str, to_agent_id: Optional[int]
+    url: str = Field(description="The URL of the target Agent-server to be called"),
+    from_agent_id: int = Field(description="The Agent that initiated this call"),
+    message: str = Field(
+        description="Information that needs to be informed to the target Agent-server"
+    ),
+    to_agent_id: Optional[int] = Field(
+        default=None,
+        description="The target Agent ID, that is, the ID of the callee, is optional.",
+    ),
 ):
     """
     Sends a message to a specific Agent Server.
@@ -196,7 +217,11 @@ async def call_agent(
             role="assistant",
         )
 
-    return f"Agent {to_agent_id} said: {response}"
+        logging.info(f"{to_agent_id} Response: {response}")
+        return f"Agent {to_agent_id} said: {response}"
+
+    logging.info(f"{url} Response: {response}")
+    return f"URL {url} said: {response}"
 
 
 if __name__ == "__main__":
