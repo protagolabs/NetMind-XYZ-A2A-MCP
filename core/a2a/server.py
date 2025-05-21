@@ -14,7 +14,6 @@ from queue import Queue, Empty
 from typing import Any, AsyncGenerator, Union
 
 from python_a2a.server import A2AServer
-from python_a2a.server.ui_templates import JSON_HTML_TEMPLATE
 from python_a2a.models import AgentCard, AgentSkill
 from python_a2a.models import TaskState, TaskStatus
 from python_a2a.models.message import Message
@@ -24,8 +23,6 @@ from flask import (
     Response,
     jsonify,
     request,
-    make_response,
-    render_template_string,
     g,
 )
 
@@ -521,47 +518,11 @@ class BaseXyzA2AServer(A2AServer):
 
         @app.route("/<int:agent_id>/a2a/agent.json", methods=["GET"])
         def enhanced_a2a_agent_json(agent_id: int):
-            agent_data = get_agent_data(agent_id)
-
-            if hasattr(self, "_use_google_a2a"):
-                if "capabilities" not in agent_data:
-                    agent_data["capabilities"] = {}
-                agent_data["capabilities"]["google_a2a_compatible"] = getattr(
-                    self, "_use_google_a2a", False
-                )
-                agent_data["capabilities"]["parts_array_format"] = getattr(
-                    self, "_use_google_a2a", False
-                )
-
-            user_agent = request.headers.get("User-Agent", "")
-            accept_header = request.headers.get("Accept", "")
-            format_param = request.args.get("format", "")
-
-            if format_param == "json" or (
-                "application/json" in accept_header
-                and not any(
-                    browser in user_agent.lower()
-                    for browser in ["mozilla", "chrome", "safari", "edge"]
-                )
-            ):
-                return jsonify(agent_data)
-
-            # Otherwise serve HTML with pretty JSON visualization
-            formatted_json = json.dumps(agent_data, indent=2)
-            response = make_response(
-                render_template_string(
-                    JSON_HTML_TEMPLATE,
-                    title=agent_data.get("name", "A2A Agent"),
-                    description="Agent Card JSON Data",
-                    json_data=formatted_json,
-                )
-            )
-            response.headers["Content-Type"] = "text/html; charset=utf-8"
-            return response
+            return get_agent_card(agent_id)
 
         @app.route("/<int:agent_id>/agent.json", methods=["GET"])
         def enhanced_root_agent_json(agent_id: int):
-            return enhanced_a2a_agent_json(agent_id)
+            return get_agent_card(agent_id)
 
         @app.route("/<int:agent_id>/stream", methods=["POST"])
         def handle_streaming_request(agent_id):

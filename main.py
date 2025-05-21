@@ -21,12 +21,12 @@ class XyzA2AServer(BaseXyzA2AServer):
         agent_info = await agent.get_agent_info()
         agent_description = agent_info.get("agent_description", "")
         agent_skills: dict = agent_info.get("skills", {})
+        logging.info(f"AgentInfo 获取成功: {agent_info}")
 
         skills = []
         for name, info in agent_skills.items():
             skills.append(AgentSkill(name=name, description=info["description"]))
 
-        logging.info(f"AgentInfo 获取成功: {agent_info}")
         return AgentCard(
             url=f"{self.url}/{agent_id}",
             name=f"XyzAgent: {agent_id}",
