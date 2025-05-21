@@ -86,14 +86,14 @@ def run_coroutine_thread(coro: typing.Coroutine):
     thread.daemon = True
     thread.start()
 
-    run_result = queue.get(block=True)
-
-    err = run_result.get("error")
-    if not err:
-        return run_result["result"]
-
-    logging.error(err)
-    raise Exception(err)
+    try:
+        run_result = queue.get(timeout=30)
+        err = run_result.get("error")
+        if not err:
+            return run_result["result"]
+    except Exception as exc:
+        logging.error(str(exc))
+        return f"Error: {exc}"
 
 
 class BaseXyzA2AServer(A2AServer):
