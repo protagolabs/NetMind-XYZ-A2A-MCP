@@ -1,4 +1,5 @@
 import logging
+import traceback
 import threading
 
 from google.protobuf.json_format import MessageToDict
@@ -39,7 +40,7 @@ class XyzA2AServer(BaseXyzA2AServer):
                 skills=skills,
         )
         except Exception as exc:
-            logging.info(f"在获取 AgentCard 时发生错误: {exc}")
+            logging.error(f"在获取 AgentCard 时发生错误: {traceback.format_exc()}")
             return AgentCard(
                 url=f"{self.url}/{agent_id}",
                 name=f"XyzAgent: {agent_id}",

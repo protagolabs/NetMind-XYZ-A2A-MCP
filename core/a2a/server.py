@@ -3,6 +3,7 @@
 # 他避免了为每一个单独的 Agent 启动一个 Server 的繁琐步骤
 # 当然, 这必须依赖项目本身已经具有了 Target Agent Search 的功能 ...
 
+import traceback
 import abc
 import time
 import json
@@ -58,10 +59,10 @@ def run_coroutine_thread(coro: typing.Coroutine):
         except Exception as exc:
             # Put the exception in the queue
             logging.error(
-                f"Exception in run_thread, coro is {coro.__qualname__}: {exc}",
+                f"Exception in run_thread, coro is {coro.__qualname__}: {traceback.format_exc()}",
                 exc_info=True,
             )
-            queue.put({"error": str(exc)})
+            queue.put({"error": traceback.format_exc()})
         finally:
             # Make sure to close all running tasks
             pending = asyncio.all_tasks(loop)
@@ -89,8 +90,8 @@ def run_coroutine_thread(coro: typing.Coroutine):
         if not err:
             return run_result["result"]
     except Exception as exc:
-        logging.error(str(exc))
-        return f"Error: {exc}"
+        logging.error(traceback.format_exc())
+        return f"Error: {traceback.format_exc()}"
 
 
 class BaseXyzA2AServer(A2AServer):
@@ -188,11 +189,15 @@ class BaseXyzA2AServer(A2AServer):
 
         @app.route("/<int:agent_id>/agent.json", methods=["GET"])
         def agent_card(agent_id: int):
-            return jsonify({"capabilities": {"streaming": True}})
+            card: AgentCard = self.get_agent_card(agent_id)
+            print(f"Card 信息: {card}")
+            return jsonify(card.to_dict())
 
         @app.route("/<int:agent_id>/a2a/agent.json", methods=["GET"])
         def enhanced_a2a_agent_json(agent_id: int):
-            return jsonify({"capabilities": {"streaming": True}})
+            card: AgentCard = self.get_agent_card(agent_id)
+            print(f"Card 信息: {card}")
+            return jsonify(card.to_dict())
 
         @app.route("/.well-known.json", methods=["GET"])
         def get_agent_card():
