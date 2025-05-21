@@ -133,6 +133,11 @@ async def call_agent(
 
     Returns:
         str: The response content from the target agent.
+
+    Important:
+        - If the user only provides the target AgentID but not the URL, the get_agent_card_by_agent_id tool should be called first to obtain the URL of the Call Agent.
+        - If the user only provides the URL but not the to_agent_id, it indicates that this is a third-party Agent Server
+        - If the user does not provide from_agent_id, the tool cannot be called. Please prompt the user 'Since I don't know who I am, I can't access other agents.'
     """
     client = A2AClient(url=url)
 
