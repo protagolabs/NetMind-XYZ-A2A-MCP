@@ -189,6 +189,10 @@ class BaseXyzA2AServer(A2AServer):
             agent_card: AgentCard = self.get_agent_card(agent_id)
             return jsonify(agent_card.to_dict())
 
+        @app.route("/<int:agent_id>/a2a/agent.json", methods=["GET"])
+        def enhanced_a2a_agent_json(agent_id: int):
+            return agent_card(agent_id)
+
         @app.route("/.well-known.json", methods=["GET"])
         def get_agent_card():
             agent_id = request.args.get("agent_id", type=int)
@@ -515,14 +519,6 @@ class BaseXyzA2AServer(A2AServer):
                 "version": agent_card.version,
                 "skills": agent_card.skills,
             }
-
-        @app.route("/<int:agent_id>/a2a/agent.json", methods=["GET"])
-        def enhanced_a2a_agent_json(agent_id: int):
-            return get_agent_card(agent_id)
-
-        @app.route("/<int:agent_id>/agent.json", methods=["GET"])
-        def enhanced_root_agent_json(agent_id: int):
-            return get_agent_card(agent_id)
 
         @app.route("/<int:agent_id>/stream", methods=["POST"])
         def handle_streaming_request(agent_id):
