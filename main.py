@@ -5,6 +5,7 @@ from google.protobuf.json_format import MessageToDict
 
 from core.a2a.server import (
     BaseXyzA2AServer,
+    AgentSkill,
     AgentCard,
     Message,
     AsyncGenerator,
@@ -18,14 +19,18 @@ class XyzA2AServer(BaseXyzA2AServer):
     async def xyz_get_agent_card(self, agent_id: int):
         agent = await RpcManager.get_agent_client(agent_id=agent_id)
         agent_info = await agent.get_agent_info()
-        agent_info = await agent.get_agent_info()
-        description = agent_info.get("agent_description", "")
-        skills = agent_info.get("skills", [])
+        agent_description = agent_info.get("agent_description", "")
+        agent_skills: dict = agent_info.get("skills", {})
 
+        skills = []
+        for name, info in agent_skills.items():
+            skills.append(AgentSkill(name=name, description=info["description"]))
+
+        logging.info(f"AgentInfo 获取成功: {agent_info}")
         return AgentCard(
             url=f"{self.url}/{agent_id}",
             name=f"XyzAgent: {agent_id}",
-            description=description,
+            description=agent_description,
             capabilities={"streaming": True},
             skills=skills,
         )

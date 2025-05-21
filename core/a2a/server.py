@@ -15,7 +15,7 @@ from typing import Any, AsyncGenerator, Union
 
 from python_a2a.server import A2AServer
 from python_a2a.server.ui_templates import JSON_HTML_TEMPLATE
-from python_a2a.models import AgentCard
+from python_a2a.models import AgentCard, AgentSkill
 from python_a2a.models import TaskState, TaskStatus
 from python_a2a.models.message import Message
 from python_a2a.models.conversation import Conversation
