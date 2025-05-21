@@ -138,6 +138,8 @@ async def call_agent(
         - If the user only provides the target AgentID but not the URL, the get_agent_card_by_agent_id tool should be called first to obtain the URL of the Call Agent.
         - If the user only provides the URL but not the to_agent_id, it indicates that this is a third-party Agent Server
         - If the user does not provide from_agent_id, the tool cannot be called. Please prompt the user 'Since I don't know who I am, I can't access other agents.'
+        - Don't be smart and fill in parameters that the user didn't tell you. Instead, you should explicitly reject the call and give a reason. For example, missing from_agent_id is fatal.
+
     """
     client = A2AClient(url=url)
 
