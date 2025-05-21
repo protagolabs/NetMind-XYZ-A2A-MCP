@@ -21,7 +21,7 @@ class XyzA2AServer(BaseXyzA2AServer):
         agent = await RpcManager.get_agent_client(agent_id=agent_id)
 
         try:
-            logging.info("开始获取 Agent Info信息")
+            logging.info(f"开始获取 Agent Info信息, Agent: {agent}, Id: {agent_id}, Type: {type(agent_id)}")
             agent_info = await agent.get_agent_info()
             agent_description = agent_info.get("agent_description", "")
 
