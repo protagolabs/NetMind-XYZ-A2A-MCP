@@ -1,12 +1,13 @@
 import re
 import os
-import httpx
+import zlib
 import time
 import logging
 from typing import Optional
 from fastmcp import FastMCP
 from urllib.parse import urlparse
 
+import httpx
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 
@@ -14,6 +15,18 @@ from core.a2a.client import A2AClient
 from core.models import MakeResponseModel
 from core.server import xyz_server
 from core.env_helper import EnvHelper
+
+
+def get_consistent_int_from_url(url_string):
+    """
+    将 URL 转换为 INT 值.
+    """
+    # 1. 确保编码一致 (例如，UTF-8)
+    url_bytes = url_string.encode("utf-8")
+    # 2. 使用相同的哈希算法
+    crc_value = zlib.crc32(url_bytes)
+    # 3. 确保结果的处理一致 (例如，& 0xffffffff 确保是无符号32位正整数)
+    return crc_value & 0xFFFFFFFF
 
 
 A2A_SERVER_URL = os.getenv("A2A_SERVER_URL", "http://127.0.0.1:5000")
@@ -116,7 +129,7 @@ async def call_agent(
     Args:
         url (str): The service URL of the target Agent Server.
         from_agent_id (int): The ID of the calling agent (typically the sender).
-        to_agent_id (int): The ID of the target agent to which the message is being sent.
+        to_agent_id (int | None): Optional, The ID of the target agent to which the message is being sent.
 
     Returns:
         str: The response content from the target agent.
@@ -132,9 +145,12 @@ async def call_agent(
 
     path = urlparse(url).path  # /1036
 
-    message_list = await xyz_server.conversation_read(
-        user_id=from_agent_id, agent_id=to_agent_id
-    )
+    message_list = []
+    if to_agent_id:
+        # 内部 Agent 需要带上上下文
+        message_list = await xyz_server.conversation_read(
+            user_id=from_agent_id, agent_id=to_agent_id
+        )
 
     rest_message = {
         "role": {"id": from_agent_id, "type": "user", "name": "Default User"},
@@ -158,19 +174,20 @@ async def call_agent(
         # 外部服务使用常规方式发送信息
         response = await client.send_message(send_message.model_dump_json())
 
-    # 缓存历史记录
-    await xyz_server.conversation_write(
-        user_id=from_agent_id,
-        agent_id=to_agent_id,
-        message=message,
-        role="user",
-    )
-    await xyz_server.conversation_write(
-        user_id=from_agent_id,
-        agent_id=to_agent_id,
-        message=response,
-        role="assistant",
-    )
+    if to_agent_id:
+        # 内部 Agent 需要缓存历史记录
+        await xyz_server.conversation_write(
+            user_id=from_agent_id,
+            agent_id=to_agent_id,
+            message=message,
+            role="user",
+        )
+        await xyz_server.conversation_write(
+            user_id=from_agent_id,
+            agent_id=to_agent_id,
+            message=response,
+            role="assistant",
+        )
 
     return f"Agent {to_agent_id} said: {response}"
 
