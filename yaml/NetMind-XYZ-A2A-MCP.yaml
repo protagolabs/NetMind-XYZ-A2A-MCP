@@ -61,6 +61,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: xyz-a2a-mcp-service
+  namespace: xyz
 spec:
   selector:
     app: xyz-a2a-mcp

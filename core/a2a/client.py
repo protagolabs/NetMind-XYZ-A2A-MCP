@@ -14,9 +14,14 @@ class A2AClient:
         self.streaming_client = StreamingClient(url)
 
     def send_message(self, message: str) -> str:
+        message = Message(
+            content=TextContent(text=message),
+            role=MessageRole.USER,
+        )
+
         return self.standard_client.send_message(message)
 
-    async def send_stream_message(self, message: str | str) -> str:
+    async def send_stream_message(self, message: str) -> str:
         streaming_text = ""
 
         message = Message(

@@ -15,7 +15,7 @@ from typing import Any, AsyncGenerator, Union
 
 from python_a2a.server import A2AServer
 from python_a2a.server.ui_templates import JSON_HTML_TEMPLATE
-from python_a2a.models import AgentCard
+from python_a2a.models import AgentCard, AgentSkill
 from python_a2a.models import TaskState, TaskStatus
 from python_a2a.models.message import Message
 from python_a2a.models.conversation import Conversation
@@ -86,14 +86,14 @@ def run_coroutine_thread(coro: typing.Coroutine):
     thread.daemon = True
     thread.start()
 
-    run_result = queue.get(block=True)
-
-    err = run_result.get("error")
-    if not err:
-        return run_result["result"]
-
-    logging.error(err)
-    raise Exception(err)
+    try:
+        run_result = queue.get(timeout=30)
+        err = run_result.get("error")
+        if not err:
+            return run_result["result"]
+    except Exception as exc:
+        logging.error(str(exc))
+        return f"Error: {exc}"
 
 
 class BaseXyzA2AServer(A2AServer):
