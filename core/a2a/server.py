@@ -44,7 +44,6 @@ def run_coroutine_thread(coro: typing.Coroutine):
         Exception: If the coroutine raises an exception
     """
     queue = Queue()
-    done_event = threading.Event()
 
     def run_thread():
         """Run the coroutine in a dedicated thread with its own event loop."""
@@ -64,24 +63,10 @@ def run_coroutine_thread(coro: typing.Coroutine):
             )
             queue.put({"error": traceback.format_exc()})
         finally:
-            # Make sure to close all running tasks
-            pending = asyncio.all_tasks(loop)
-            for task in pending:
-                task.cancel()
-
-            # Run the event loop until all tasks are cancelled
-            if pending:
-                loop.run_until_complete(
-                    asyncio.gather(*pending, return_exceptions=True)
-                )
-
-            # Clean up the loop and signal we're done
             loop.close()
-            done_event.set()
 
     # Start the thread
     thread = threading.Thread(target=run_thread)
-    thread.daemon = True
     thread.start()
 
     try:

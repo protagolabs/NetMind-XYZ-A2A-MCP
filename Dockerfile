@@ -33,4 +33,4 @@ EXPOSE 10254
 EXPOSE 5000
 
 # 启动命令
-CMD ["gunicorn", "-w1", "-b", "0.0.0.0:5000", "main:app"]
+CMD ["gunicorn", "-w", "1", "--threads", "8", "-b", "0.0.0.0:5000", "main:app"]
