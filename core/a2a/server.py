@@ -14,7 +14,6 @@ from queue import Queue, Empty
 from typing import Any, AsyncGenerator, Union
 
 from python_a2a.server import A2AServer
-from python_a2a.server.ui_templates import JSON_HTML_TEMPLATE
 from python_a2a.models import AgentCard, AgentSkill
 from python_a2a.models import TaskState, TaskStatus
 from python_a2a.models.message import Message
@@ -24,8 +23,6 @@ from flask import (
     Response,
     jsonify,
     request,
-    make_response,
-    render_template_string,
     g,
 )
 
@@ -120,7 +117,9 @@ class BaseXyzA2AServer(A2AServer):
         self._use_google_a2a = google_a2a_compatible
 
     def get_agent_card(self, agent_id: int) -> AgentCard:
-        return run_coroutine_thread(self.xyz_get_agent_card(agent_id))
+        card = run_coroutine_thread(self.xyz_get_agent_card(agent_id))
+        logging.info(f"获取 card: {card}")
+        return card
 
     @abc.abstractmethod
     async def xyz_get_agent_card(self, agent_id: int) -> AgentCard:
@@ -142,14 +141,14 @@ class BaseXyzA2AServer(A2AServer):
         )
 
     def get_metadata(self, agent_id) -> dict[str, Any]:
-        agent_card: AgentCard = self.get_agent_card(agent_id)
+        card: AgentCard = self.get_agent_card(agent_id)
 
         return {
             "agent_type": "A2AServer",
             "capabilities": ["text"],
             "has_agent_card": True,
-            "agent_name": agent_card.name,
-            "agent_version": agent_card.version,
+            "agent_name": card.name,
+            "agent_version": card.version,
             "google_a2a_compatible": self._use_google_a2a,
         }
 
@@ -175,22 +174,29 @@ class BaseXyzA2AServer(A2AServer):
         @app.route("/<int:agent_id>/", methods=["GET"])
         def a2a_root_get(agent_id: int):
             """Root endpoint for A2A (GET), redirects to agent card"""
-            agent_card: AgentCard = self.get_agent_card(agent_id)
+            card: AgentCard = self.get_agent_card(agent_id)
 
             return jsonify(
                 {
-                    "name": agent_card.name,
-                    "description": agent_card.description,
+                    "name": card.name,
+                    "description": card.description,
                     "agent_card_url": f"{self.url}/.well-known.json?agent_id={agent_id}",
                     "protocol": "a2a",
-                    "capabilities": agent_card.capabilities,
+                    "capabilities": card.capabilities,
                 }
             )
 
         @app.route("/<int:agent_id>/agent.json", methods=["GET"])
         def agent_card(agent_id: int):
-            agent_card: AgentCard = self.get_agent_card(agent_id)
-            return jsonify(agent_card.to_dict())
+            card: AgentCard = self.get_agent_card(agent_id)
+            print(f"Card 信息: {card}")
+            return jsonify(card.to_dict())
+
+        @app.route("/<int:agent_id>/a2a/agent.json", methods=["GET"])
+        def enhanced_a2a_agent_json(agent_id: int):
+            card: AgentCard = self.get_agent_card(agent_id)
+            print(f"Card 信息: {card}")
+            return jsonify(card.to_dict())
 
         @app.route("/.well-known.json", methods=["GET"])
         def get_agent_card():
@@ -510,58 +516,14 @@ class BaseXyzA2AServer(A2AServer):
             return a2a_tasks_stream(agent_id)
 
         def get_agent_data(agent_id: int):
-            agent_card: AgentCard = self.get_agent_card(agent_id)
+            card: AgentCard = self.get_agent_card(agent_id)
 
             return {
-                "name": agent_card.name,
-                "description": agent_card.description,
-                "version": agent_card.version,
-                "skills": agent_card.skills,
+                "name": card.name,
+                "description": card.description,
+                "version": card.version,
+                "skills": card.skills,
             }
-
-        @app.route("/<int:agent_id>/a2a/agent.json", methods=["GET"])
-        def enhanced_a2a_agent_json(agent_id: int):
-            agent_data = get_agent_data(agent_id)
-
-            if hasattr(self, "_use_google_a2a"):
-                if "capabilities" not in agent_data:
-                    agent_data["capabilities"] = {}
-                agent_data["capabilities"]["google_a2a_compatible"] = getattr(
-                    self, "_use_google_a2a", False
-                )
-                agent_data["capabilities"]["parts_array_format"] = getattr(
-                    self, "_use_google_a2a", False
-                )
-
-            user_agent = request.headers.get("User-Agent", "")
-            accept_header = request.headers.get("Accept", "")
-            format_param = request.args.get("format", "")
-
-            if format_param == "json" or (
-                "application/json" in accept_header
-                and not any(
-                    browser in user_agent.lower()
-                    for browser in ["mozilla", "chrome", "safari", "edge"]
-                )
-            ):
-                return jsonify(agent_data)
-
-            # Otherwise serve HTML with pretty JSON visualization
-            formatted_json = json.dumps(agent_data, indent=2)
-            response = make_response(
-                render_template_string(
-                    JSON_HTML_TEMPLATE,
-                    title=agent_data.get("name", "A2A Agent"),
-                    description="Agent Card JSON Data",
-                    json_data=formatted_json,
-                )
-            )
-            response.headers["Content-Type"] = "text/html; charset=utf-8"
-            return response
-
-        @app.route("/<int:agent_id>/agent.json", methods=["GET"])
-        def enhanced_root_agent_json(agent_id: int):
-            return enhanced_a2a_agent_json(agent_id)
 
         @app.route("/<int:agent_id>/stream", methods=["POST"])
         def handle_streaming_request(agent_id):

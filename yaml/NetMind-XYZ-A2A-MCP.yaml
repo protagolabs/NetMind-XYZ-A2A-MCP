@@ -70,3 +70,7 @@ spec:
     protocol: TCP
     port: 10254
     targetPort: 10254
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800
