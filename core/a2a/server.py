@@ -85,7 +85,7 @@ def run_coroutine_thread(coro: typing.Coroutine):
     thread.start()
 
     try:
-        run_result = queue.get(timeout=30)
+        run_result = queue.get(timeout=300)
         err = run_result.get("error")
         if not err:
             return run_result["result"]

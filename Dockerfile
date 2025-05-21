@@ -30,6 +30,7 @@ RUN pip install --no-cache-dir -r /app/requirements.txt
 
 # 暴露端口（根据config中的配置）
 EXPOSE 10254
+EXPOSE 5000
 
 # 启动命令
 CMD ["gunicorn", "-w1", "-b", "0.0.0.0:5000", "main:app"]
