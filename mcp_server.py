@@ -162,7 +162,7 @@ async def call_agent_by_agent_url(
     client = A2AClient(url=url)
 
     # 外部服务使用常规方式发送信息
-    response = await client.send_message(message)
+    response = client.send_message(message)
     logging.info(f"{url} Response: {response}")
     return f"URL {url} said: {response}"
 
