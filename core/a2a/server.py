@@ -117,7 +117,9 @@ class BaseXyzA2AServer(A2AServer):
         self._use_google_a2a = google_a2a_compatible
 
     def get_agent_card(self, agent_id: int) -> AgentCard:
-        return run_coroutine_thread(self.xyz_get_agent_card(agent_id))
+        card = run_coroutine_thread(self.xyz_get_agent_card(agent_id))
+        logging.info(f"获取 card: {card}")
+        return card
 
     @abc.abstractmethod
     async def xyz_get_agent_card(self, agent_id: int) -> AgentCard:
@@ -139,14 +141,14 @@ class BaseXyzA2AServer(A2AServer):
         )
 
     def get_metadata(self, agent_id) -> dict[str, Any]:
-        agent_card: AgentCard = self.get_agent_card(agent_id)
+        card: AgentCard = self.get_agent_card(agent_id)
 
         return {
             "agent_type": "A2AServer",
             "capabilities": ["text"],
             "has_agent_card": True,
-            "agent_name": agent_card.name,
-            "agent_version": agent_card.version,
+            "agent_name": card.name,
+            "agent_version": card.version,
             "google_a2a_compatible": self._use_google_a2a,
         }
 
@@ -172,26 +174,29 @@ class BaseXyzA2AServer(A2AServer):
         @app.route("/<int:agent_id>/", methods=["GET"])
         def a2a_root_get(agent_id: int):
             """Root endpoint for A2A (GET), redirects to agent card"""
-            agent_card: AgentCard = self.get_agent_card(agent_id)
+            card: AgentCard = self.get_agent_card(agent_id)
 
             return jsonify(
                 {
-                    "name": agent_card.name,
-                    "description": agent_card.description,
+                    "name": card.name,
+                    "description": card.description,
                     "agent_card_url": f"{self.url}/.well-known.json?agent_id={agent_id}",
                     "protocol": "a2a",
-                    "capabilities": agent_card.capabilities,
+                    "capabilities": card.capabilities,
                 }
             )
 
         @app.route("/<int:agent_id>/agent.json", methods=["GET"])
         def agent_card(agent_id: int):
-            agent_card: AgentCard = self.get_agent_card(agent_id)
-            return jsonify(agent_card.to_dict())
+            card: AgentCard = self.get_agent_card(agent_id)
+            print(f"Card 信息: {card}")
+            return jsonify(card.to_dict())
 
         @app.route("/<int:agent_id>/a2a/agent.json", methods=["GET"])
         def enhanced_a2a_agent_json(agent_id: int):
-            return agent_card(agent_id)
+            card: AgentCard = self.get_agent_card(agent_id)
+            print(f"Card 信息: {card}")
+            return jsonify(card.to_dict())
 
         @app.route("/.well-known.json", methods=["GET"])
         def get_agent_card():
@@ -511,13 +516,13 @@ class BaseXyzA2AServer(A2AServer):
             return a2a_tasks_stream(agent_id)
 
         def get_agent_data(agent_id: int):
-            agent_card: AgentCard = self.get_agent_card(agent_id)
+            card: AgentCard = self.get_agent_card(agent_id)
 
             return {
-                "name": agent_card.name,
-                "description": agent_card.description,
-                "version": agent_card.version,
-                "skills": agent_card.skills,
+                "name": card.name,
+                "description": card.description,
+                "version": card.version,
+                "skills": card.skills,
             }
 
         @app.route("/<int:agent_id>/stream", methods=["POST"])
