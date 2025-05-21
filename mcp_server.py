@@ -82,6 +82,7 @@ async def get_agent_card_by_url(url: str = Field(description="Agent Server URL")
             else:
                 agent_server_url = f"{url}.well-known.json"
 
+            logging.info(f"根据 URL 获取 Card 信息: {agent_server_url}")
             response = await client.get(agent_server_url)
             return response.json()
     except Exception as exc:
@@ -126,10 +127,18 @@ async def get_agent_card_by_agent_id(
         }
 
     """
-    async with httpx.AsyncClient(timeout=EnvHelper.get_http_timeout()) as client:
-        agent_server_url = f"{A2A_SERVER_URL}/.well-known.json"
-        response = await client.get(agent_server_url, params={"agent_id": agent_id})
-        return response.json()
+
+    try:
+        logging.info(f"根据 AgentID 获取 Card 信息: {agent_id}")
+        async with httpx.AsyncClient(timeout=EnvHelper.get_http_timeout()) as client:
+            agent_server_url = f"{A2A_SERVER_URL}/.well-known.json"
+            response = await client.get(agent_server_url, params={"agent_id": agent_id})
+            return response.json()
+    except Exception as exc:
+        return {
+            "err": str(exc),
+            "message": "Failed to request AgentCard, Check agentID is valid",
+        }
 
 
 @mcp.tool()
@@ -188,14 +197,15 @@ async def call_agent(
 
     message_list.append(rest_message)
 
+    # 内部 Agent-Server 发送方式
+    send_message = MakeResponseModel(
+        messages_list=message_list,
+        user_id=str(from_agent_id),
+        mcp_info_list=[],
+        other_data=None,
+    )
+
     if re.match(r"^/\d+$", path):
-        # 内部 Agent-Server 发送方式
-        send_message = MakeResponseModel(
-            messages_list=message_list,
-            user_id=str(from_agent_id),
-            mcp_info_list=[],
-            other_data=None,
-        )
         # XYZ 平台使用 stream 发送信息
         response = await client.send_stream_message(send_message.model_dump_json())
     else:
@@ -225,6 +235,4 @@ async def call_agent(
 
 
 if __name__ == "__main__":
-    # 你好, 我需要获取 1039 的 Card 信息, 超时时间为 1min
-    # 我的 AgentID 是 2, 我希望向 1039 发送一条 "你好" 的消息并等待回复. 超时时间为 2min
     mcp.run(transport="sse")
