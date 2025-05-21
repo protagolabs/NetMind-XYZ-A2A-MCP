@@ -18,22 +18,35 @@ from mcp_server import mcp
 class XyzA2AServer(BaseXyzA2AServer):
     async def xyz_get_agent_card(self, agent_id: int):
         agent = await RpcManager.get_agent_client(agent_id=agent_id)
-        agent_info = await agent.get_agent_info()
-        agent_description = agent_info.get("agent_description", "")
-        agent_skills: dict = agent_info.get("skills", {})
-        logging.info(f"AgentInfo 获取成功: {agent_info}")
 
-        skills = []
-        for name, info in agent_skills.items():
-            skills.append(AgentSkill(name=name, description=info["description"]))
+        try:
+            logging.info("开始获取 Agent Info信息")
+            agent_info = await agent.get_agent_info()
+            agent_description = agent_info.get("agent_description", "")
 
-        return AgentCard(
-            url=f"{self.url}/{agent_id}",
-            name=f"XyzAgent: {agent_id}",
-            description=agent_description,
-            capabilities={"streaming": True},
-            skills=skills,
+            agent_skills: dict = agent_info.get("skills", {})
+            logging.info(f"AgentInfo 获取成功: {agent_info}")
+
+            skills = []
+            for name, info in agent_skills.items():
+                skills.append(AgentSkill(name=name, description=info["description"]))
+
+            return AgentCard(
+                url=f"{self.url}/{agent_id}",
+                name=f"XyzAgent: {agent_id}",
+                description=agent_description,
+                capabilities={"streaming": True},
+                skills=skills,
         )
+        except Exception as exc:
+            logging.info(f"在获取 AgentCard 时发生错误: {exc}")
+            return AgentCard(
+                url=f"{self.url}/{agent_id}",
+                name=f"XyzAgent: {agent_id}",
+                description="From XYZ platform",
+                capabilities={"streaming": True},
+                skills=[],
+            )
 
     async def xyz_stream_response(
         self, agent_id: int, message: Message
