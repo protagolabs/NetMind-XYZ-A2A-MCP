@@ -9,6 +9,7 @@ dependencies = [
     "asyncio-atexit>=1.0.1",
     "dotenv>=0.9.9",
     "fastmcp>=2.3.4",
+    "flask[async]>=3.1.1",
     "gunicorn>=23.0.0",
     "httpx>=0.28.1",
     "pysocks>=1.7.1",

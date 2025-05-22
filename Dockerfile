@@ -1,4 +1,4 @@
-# 使用Python 3.10作为基础镜像
+# 使用Python 3.12 作为基础镜像
 FROM python:3.12-slim
 
 # 设置工作目录
@@ -12,6 +12,7 @@ ENV PYTHONUNBUFFERED=1 \
 # 安装系统依赖
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
+        bash \
         gcc \
         python3-dev \
         default-libmysqlclient-dev \
@@ -30,6 +31,9 @@ RUN pip install --no-cache-dir -r /app/requirements.txt
 
 # 暴露端口（根据config中的配置）
 EXPOSE 10254
+EXPOSE 5000
 
-# 启动命令
-CMD ["gunicorn", "-w1", "-b", "0.0.0.0:5000", "main:app"]
+# 添加执行权限
+RUN chmod +x /app/run.sh
+
+ENTRYPOINT ["./run.sh"]

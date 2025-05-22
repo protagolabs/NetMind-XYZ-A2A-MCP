@@ -5,7 +5,7 @@ import dotenv
 env = os.getenv("ENV", "local")
 
 dirname = os.path.dirname(os.path.dirname(__file__))
-dotenv.load_dotenv(os.path.join(dirname, ".env", env + ".env"))
+dotenv.load_dotenv(os.path.join(dirname, ".env", f".env_{env}"))
 
 
 class EnvHelper:
