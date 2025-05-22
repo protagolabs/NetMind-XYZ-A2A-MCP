@@ -29,25 +29,25 @@ class XyzA2AServer(BaseXyzA2AServer):
         model = MakeResponseModel.model_validate_json(json_data=message.content.text)
         logging.info(f"收到来自 {model.user_id} 发送给 {agent_id} 的信息 {message}")
 
-        agent = await RpcManager.get_agent_client(agent_id=agent_id)
+        async with await RpcManager.get_agent_client(agent_id=agent_id) as agent:
+            try:
+                async for msg in agent.run_message_streaming(
+                    messages_list=model.messages_list,
+                    user_id=str(model.user_id),
+                    mcp_info_list=model.mcp_info_list,
+                    other_data=model.other_data,
+                ):
+                    msg = MessageToDict(msg)
 
-        try:
-            async for msg in agent.run_message_streaming(
-                messages_list=model.messages_list,
-                user_id=str(model.user_id),
-                mcp_info_list=model.mcp_info_list,
-                other_data=model.other_data,
-            ):
-                msg = MessageToDict(msg)
+                    if msg["type"] == "stream_content":
+                        content = msg["data"]["content"]
+                        yield content
+                    else:
+                        break
 
-                if msg["type"] == "stream_content":
-                    content = msg["data"]["content"]
-                    yield content
-                    await asyncio.sleep(0.1)
-
-        except Exception as exc:
-            logging.error(f"生成回复时错误: {exc}")
-            raise exc
+            except Exception as exc:
+                logging.error(f"生成回复时错误: {exc}")
+                raise exc
 
     async def xyz_handle_message(self, agent_id: int, message: Message) -> Message:
         pass
