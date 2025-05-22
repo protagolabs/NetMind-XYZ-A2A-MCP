@@ -3,12 +3,10 @@
 # 他避免了为每一个单独的 Agent 启动一个 Server 的繁琐步骤
 # 当然, 这必须依赖项目本身已经具有了 Target Agent Search 的功能 ...
 
-import traceback
 import abc
 import time
 import json
 import logging
-import typing
 import asyncio
 import threading
 from queue import Queue, Empty
@@ -27,56 +25,7 @@ from flask import (
     g,
 )
 
-
-def run_coroutine_thread(coro: typing.Coroutine):
-    """
-    Run a coroutine in a separate thread with its own event loop.
-    Returns the result of the coroutine or raises an exception if it fails.
-
-    Args:
-        coro: The coroutine to run
-
-    Returns:
-        The result of the coroutine
-
-    Raises:
-        TimeoutError: If the coroutine doesn't complete within the timeout
-        Exception: If the coroutine raises an exception
-    """
-    queue = Queue()
-
-    def run_thread():
-        """Run the coroutine in a dedicated thread with its own event loop."""
-        # Create a new event loop for this thread
-        try:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-
-            # Run the coroutine and put the result in the queue
-            result = loop.run_until_complete(coro)
-            queue.put({"result": result})
-        except Exception as exc:
-            # Put the exception in the queue
-            logging.error(
-                f"Exception in run_thread, coro is {coro.__qualname__}: {traceback.format_exc()}",
-                exc_info=True,
-            )
-            queue.put({"error": traceback.format_exc()})
-        finally:
-            loop.close()
-
-    # Start the thread
-    thread = threading.Thread(target=run_thread)
-    thread.start()
-
-    try:
-        run_result = queue.get(timeout=300)
-        err = run_result.get("error")
-        if not err:
-            return run_result["result"]
-    except Exception as exc:
-        logging.error(traceback.format_exc())
-        return f"Error: {traceback.format_exc()}"
+from flask.app import current_app
 
 
 class BaseXyzA2AServer(A2AServer):
@@ -103,7 +52,7 @@ class BaseXyzA2AServer(A2AServer):
         self._use_google_a2a = google_a2a_compatible
 
     def get_agent_card(self, agent_id: int) -> AgentCard:
-        card = run_coroutine_thread(self.xyz_get_agent_card(agent_id))
+        card = current_app.ensure_sync(self.xyz_get_agent_card)(agent_id)
         logging.info(f"获取 card: {card}")
         return card
 
@@ -122,8 +71,8 @@ class BaseXyzA2AServer(A2AServer):
         pass
 
     def handle_message(self, message):
-        return run_coroutine_thread(
-            self.xyz_handle_message(agent_id=g.agent_id, message=message)
+        return current_app.ensure_sync(self.xyz_handle_message)(
+            agent_id=g.agent_id, message=message
         )
 
     def get_metadata(self, agent_id) -> dict[str, Any]:

@@ -1,4 +1,4 @@
-# 使用Python 3.10作为基础镜像
+# 使用Python 3.12 作为基础镜像
 FROM python:3.12-slim
 
 # 设置工作目录
@@ -32,5 +32,7 @@ RUN pip install --no-cache-dir -r /app/requirements.txt
 EXPOSE 10254
 EXPOSE 5000
 
-# 启动命令
-CMD ["gunicorn", "-w", "1", "--threads", "8", "-b", "0.0.0.0:5000", "main:app"]
+# 添加执行权限
+RUN chmod +x /app/run.sh
+
+ENTRYPOINT ["./run.sh"]
