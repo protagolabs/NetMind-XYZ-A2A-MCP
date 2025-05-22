@@ -149,8 +149,7 @@ async def call_agent_by_agent_url(
         message: The textual message to be delivered to the Agent-server at the specified URL.
 
     Returns:
-        A string containing the response from the target Agent-server, prefixed with 'URL {url} said: '.
-        For example: 'URL https://example-agent.com/api/message said: Received your message.'
+        A string containing the response from the target Agent-server.
     """
 
     logging.info(f"""
@@ -193,8 +192,7 @@ async def call_agent_by_agent_id(
         to_agent_id: The ID of the internal XYZ Agent that should receive the message.
 
     Returns:
-        A string containing the response from the target internal Agent, prefixed with 'Agent {to_agent_id} said: '.
-        For example: 'Agent 12345 said: I can help with that.'
+        A string containing the response from the target Agent-server.
     """
     agent_server_url = f"{A2A_SERVER_URL}/{to_agent_id}"
 
