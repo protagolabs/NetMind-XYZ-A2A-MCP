@@ -31,23 +31,24 @@ class XyzA2AServer(BaseXyzA2AServer):
 
         agent = await RpcManager.get_agent_client(agent_id=agent_id)
 
-        try:
-            async for msg in agent.run_message_streaming(
-                messages_list=model.messages_list,
-                user_id=str(model.user_id),
-                mcp_info_list=model.mcp_info_list,
-                other_data=model.other_data,
-            ):
-                msg = MessageToDict(msg)
+        async with agent:
+            try:
+                async for msg in agent.run_message_streaming(
+                    messages_list=model.messages_list,
+                    user_id=str(model.user_id),
+                    mcp_info_list=model.mcp_info_list,
+                    other_data=model.other_data,
+                ):
+                    msg = MessageToDict(msg)
 
-                if msg["type"] == "stream_content":
-                    content = msg["data"]["content"]
-                    yield content
-                    await asyncio.sleep(0.1)
+                    if msg["type"] == "stream_content":
+                        content = msg["data"]["content"]
+                        yield content
+                        await asyncio.sleep(0.1)
 
-        except Exception as exc:
-            logging.error(f"生成回复时错误: {exc}")
-            raise exc
+            except Exception as exc:
+                logging.error(f"生成回复时错误: {exc}")
+                raise exc
 
     async def xyz_handle_message(self, agent_id: int, message: Message) -> Message:
         pass
