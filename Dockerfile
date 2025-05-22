@@ -12,6 +12,7 @@ ENV PYTHONUNBUFFERED=1 \
 # 安装系统依赖
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
+        bash \
         gcc \
         python3-dev \
         default-libmysqlclient-dev \
