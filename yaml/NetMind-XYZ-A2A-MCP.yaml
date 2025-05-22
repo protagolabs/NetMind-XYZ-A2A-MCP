@@ -25,6 +25,9 @@ spec:
           ports:
             - containerPort: 10254
               protocol: TCP
+          env:
+            - name: APP_ENV
+              value: "${ENV}"
           resources:
             requests:
               cpu: "500m"
