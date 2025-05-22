@@ -12,7 +12,7 @@ from pydantic import Field
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 
-from core.a2a.client import A2AClient
+from core.a2a.client import A2AClient, Message
 from core.models import MakeResponseModel
 from core.server import xyz_server
 from core.env_helper import EnvHelper
@@ -148,8 +148,7 @@ async def call_agent_by_agent_url(
         message: The textual message to be delivered to the Agent-server at the specified URL.
 
     Returns:
-        A string containing the response from the target Agent-server, prefixed with 'URL {url} said: '.
-        For example: 'URL https://example-agent.com/api/message said: Received your message.'
+        A string containing the response from the target Agent-server.
     """
 
     logging.info(f"""
@@ -163,7 +162,7 @@ async def call_agent_by_agent_url(
     # 外部服务使用常规方式发送信息
     response = client.send_message(message)
     logging.info(f"{url} Response: {response}")
-    return f"URL {url} said: {response}"
+    return response.content.text
 
 
 @mcp.tool()
@@ -192,8 +191,7 @@ async def call_agent_by_agent_id(
         to_agent_id: The ID of the internal XYZ Agent that should receive the message.
 
     Returns:
-        A string containing the response from the target internal Agent, prefixed with 'Agent {to_agent_id} said: '.
-        For example: 'Agent 12345 said: I can help with that.'
+        A string containing the response from the target Agent-server.
     """
     agent_server_url = f"{A2A_SERVER_URL}/{to_agent_id}"
 
@@ -230,7 +228,7 @@ async def call_agent_by_agent_id(
         other_data=None,
     )
 
-    response = await client.send_stream_message(send_message.model_dump_json())
+    response: Message = await client.send_stream_message(send_message.model_dump_json())
 
     # 内部 Agent 需要缓存历史记录
     await xyz_server.conversation_write(
@@ -242,12 +240,12 @@ async def call_agent_by_agent_id(
     await xyz_server.conversation_write(
         user_id=from_agent_id,
         agent_id=to_agent_id,
-        message=response,
+        message=response.content.text,
         role="assistant",
     )
 
     logging.info(f"{to_agent_id} Response: {response}")
-    return f"Agent {to_agent_id} said: {response}"
+    return response.content.text
 
 
 if __name__ == "__main__":

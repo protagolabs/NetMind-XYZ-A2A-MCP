@@ -21,7 +21,7 @@ class A2AClient:
 
         return self.standard_client.send_message(message)
 
-    async def send_stream_message(self, message: str) -> str:
+    async def send_stream_message(self, message: str) -> Message:
         streaming_text = ""
 
         message = Message(
@@ -45,4 +45,4 @@ class A2AClient:
             logging.error(f"收集流式信息错误: {str(exc)}")
             raise exc
 
-        return streaming_text
+        return Message(content=TextContent(text=streaming_text), role=MessageRole.AGENT)
