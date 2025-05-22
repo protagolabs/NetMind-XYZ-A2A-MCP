@@ -123,21 +123,18 @@ class BaseXyzA2AServer(A2AServer):
 
         @app.route("/<int:agent_id>/agent.json", methods=["GET"])
         def agent_card(agent_id: int):
-            card: AgentCard = self.get_agent_card(agent_id)
-            print(f"Card 信息: {card}")
-            return jsonify(card.to_dict())
+            # 内部平台支持 streaming, 所以这里直接返回 streaming 即可. 减少请求次数
+            return jsonify({"capabilities": {"streaming": True}})
 
         @app.route("/<int:agent_id>/a2a/agent.json", methods=["GET"])
         def enhanced_a2a_agent_json(agent_id: int):
-            card: AgentCard = self.get_agent_card(agent_id)
-            print(f"Card 信息: {card}")
-            return jsonify(card.to_dict())
+            # 内部平台支持 streaming, 所以这里直接返回 streaming 即可. 减少请求次数
+            return jsonify({"capabilities": {"streaming": True}})
 
         @app.route("/.well-known.json", methods=["GET"])
         def get_agent_card():
             agent_id = request.args.get("agent_id", type=int)
             card: AgentCard = self.get_agent_card(agent_id)
-            print(f"Card 信息: {card}")
             return jsonify(card.to_dict())
 
         @app.route("/<int:agent_id>/a2a/tasks/send", methods=["POST"])
