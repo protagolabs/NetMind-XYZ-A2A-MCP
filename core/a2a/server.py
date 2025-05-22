@@ -52,8 +52,7 @@ class BaseXyzA2AServer(A2AServer):
         self._use_google_a2a = google_a2a_compatible
 
     def get_agent_card(self, agent_id: int) -> AgentCard:
-        card = current_app.ensure_sync(self.xyz_get_agent_card)(agent_id)
-        logging.info(f"获取 card: {card}")
+        card = self.xyz_get_agent_card(agent_id)
         return card
 
     @abc.abstractmethod

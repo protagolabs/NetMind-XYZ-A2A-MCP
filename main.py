@@ -1,12 +1,10 @@
 import logging
 import asyncio
-import traceback
 
 from google.protobuf.json_format import MessageToDict
 
 from core.a2a.server import (
     BaseXyzA2AServer,
-    AgentSkill,
     AgentCard,
     Message,
     AsyncGenerator,
@@ -16,38 +14,14 @@ from core.models import MakeResponseModel
 
 
 class XyzA2AServer(BaseXyzA2AServer):
-    async def xyz_get_agent_card(self, agent_id: int):
-        agent = await RpcManager.get_agent_client(agent_id=agent_id)
-
-        try:
-            logging.info(
-                f"开始获取 Agent Info信息, Agent: {agent}, Id: {agent_id}, Type: {type(agent_id)}"
-            )
-            agent_info = await agent.get_agent_info()
-            agent_description = agent_info.get("agent_description", "")
-
-            agent_skills: dict = agent_info.get("skills", {})
-            logging.info(f"AgentInfo 获取成功: {agent_info}")
-
-            skills = []
-            for name, info in agent_skills.items():
-                skills.append(AgentSkill(name=name, description=info["description"]))
-
-            return AgentCard(
-                url=f"{self.url}/{agent_id}",
-                name=f"XyzAgent: {agent_id}",
-                description=agent_description,
-                capabilities={"streaming": True},
-                skills=skills,
-            )
-        except Exception as exc:
-            return AgentCard(
-                url=f"{self.url}/{agent_id}",
-                name=f"XyzAgent: {agent_id}",
-                description="From XYZ platform",
-                capabilities={"streaming": True},
-                skills=[],
-            )
+    def xyz_get_agent_card(self, agent_id: int):
+        return AgentCard(
+            url=f"{self.url}/{agent_id}",
+            name=f"XyzAgent: {agent_id}",
+            description=("From XYZ platform. Agent: {agent_id}"),
+            capabilities={"streaming": True},
+            skills=[],
+        )
 
     async def xyz_stream_response(
         self, agent_id: int, message: Message
