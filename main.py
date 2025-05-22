@@ -1,4 +1,5 @@
 import logging
+import asyncio
 import traceback
 
 from google.protobuf.json_format import MessageToDict
@@ -12,15 +13,18 @@ from core.a2a.server import (
 )
 from core.libs.rpc import RpcManager
 from core.models import MakeResponseModel
-from mcp_server import mcp
 
 
 class XyzA2AServer(BaseXyzA2AServer):
     async def xyz_get_agent_card(self, agent_id: int):
+        logging.info("开始获取 AgentClient")
         agent = await RpcManager.get_agent_client(agent_id=agent_id)
+        logging.info("获取 AgentClient成功")
 
         try:
-            logging.info(f"开始获取 Agent Info信息, Agent: {agent}, Id: {agent_id}, Type: {type(agent_id)}")
+            logging.info(
+                f"开始获取 Agent Info信息, Agent: {agent}, Id: {agent_id}, Type: {type(agent_id)}"
+            )
             agent_info = await agent.get_agent_info()
             agent_description = agent_info.get("agent_description", "")
 
@@ -37,7 +41,7 @@ class XyzA2AServer(BaseXyzA2AServer):
                 description=agent_description,
                 capabilities={"streaming": True},
                 skills=skills,
-        )
+            )
         except Exception as exc:
             logging.error(f"在获取 AgentCard 时发生错误: {traceback.format_exc()}")
             return AgentCard(
@@ -67,8 +71,8 @@ class XyzA2AServer(BaseXyzA2AServer):
 
                 if msg["type"] == "stream_content":
                     content = msg["data"]["content"]
-                    print(content, end="\r", flush=True)
                     yield content
+                    await asyncio.sleep(0.1)
 
         except Exception as exc:
             logging.error(f"生成回复时错误: {exc}")
