@@ -53,7 +53,7 @@ class XyzA2AServer(BaseXyzA2AServer):
 
         while True:
             try:
-                item = q.get()
+                item = q.get(timeout=1)
 
                 if item is not None:
                     return item
@@ -63,7 +63,7 @@ class XyzA2AServer(BaseXyzA2AServer):
                     exc = future.exception()
                     if exc:
                         logging.error(f"运行 rpc 执行器 err: {exc}")
-                        break
+                        return f"运行 rpc 执行器 err: {exc}"
                 else:
                     pass
 
@@ -77,6 +77,7 @@ class XyzA2AServer(BaseXyzA2AServer):
                 json_data=message.content.text
             )
             logging.info(f"收到来自 {model.user_id} 发送给 {agent_id} 的信息 {message}")
+
             async with await RpcManager.get_agent_client(agent_id=agent_id) as agent:
                 try:
                     async for msg in agent.run_message_streaming(
@@ -96,6 +97,7 @@ class XyzA2AServer(BaseXyzA2AServer):
                             q.put(content)
                         else:
                             q.put(None)
+
                 except Exception as exc:
                     q.put(traceback.format_exc())
                     q.put(None)
@@ -106,7 +108,7 @@ class XyzA2AServer(BaseXyzA2AServer):
 
         while True:
             try:
-                item = q.get()
+                item = q.get(timeout=1)
 
                 if item is not None:
                     yield item
