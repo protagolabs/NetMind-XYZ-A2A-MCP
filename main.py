@@ -1,3 +1,4 @@
+import asyncio
 import traceback
 import logging
 import queue
@@ -67,6 +68,8 @@ class XyzA2AServer(BaseXyzA2AServer):
                 else:
                     pass
 
+            await asyncio.sleep(0.1)
+
     async def xyz_stream_response(
         self, agent_id: int, message: Message
     ) -> AsyncGenerator[str, None]:
@@ -123,6 +126,8 @@ class XyzA2AServer(BaseXyzA2AServer):
                         break
                 else:
                     pass
+
+            await asyncio.sleep(0.1)
 
     async def xyz_handle_message(self, agent_id: int, message: Message) -> Message:
         pass
