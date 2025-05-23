@@ -1,3 +1,4 @@
+import traceback
 import logging
 import queue
 
@@ -92,6 +93,7 @@ class XyzA2AServer(BaseXyzA2AServer):
                         else:
                             q.put(None)
                 except Exception as exc:
+                    q.put(traceback.format_exc())
                     q.put(None)
                     logging.error(f"生成回复时错误: {exc}")
                     raise exc
