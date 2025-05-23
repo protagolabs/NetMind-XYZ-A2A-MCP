@@ -55,7 +55,7 @@ class XyzA2AServer(BaseXyzA2AServer):
 
         while True:
             try:
-                item = q.get(timeout=10)
+                item = q.get(timeout=30)
 
                 if item is not None:
                     return item
@@ -99,20 +99,18 @@ class XyzA2AServer(BaseXyzA2AServer):
                         if msg["type"] == "stream_content":
                             content = msg["data"]["content"]
                             q.put(content)
-                        else:
-                            q.put(None)
 
                 except Exception as exc:
                     q.put(traceback.format_exc())
-                    q.put(None)
                     logging.error(f"生成回复时错误: {exc}")
-                    raise exc
+
+            q.put(None)
 
         future = rpc_executor.submit_coroutine(_xyz_stream_response())
 
         while True:
             try:
-                item = q.get(timeout=10)
+                item = q.get()
 
                 if item is not None:
                     yield item
@@ -128,7 +126,7 @@ class XyzA2AServer(BaseXyzA2AServer):
                 else:
                     pass
 
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0)
 
     async def xyz_handle_message(self, agent_id: int, message: Message) -> Message:
         pass
