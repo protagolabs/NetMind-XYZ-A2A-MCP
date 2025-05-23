@@ -16,6 +16,12 @@ rpc_executor = RpcExecutor()
 
 
 class XyzA2AServer(BaseXyzA2AServer):
+    """
+    适用于 XYZ 的内部 Agent 的 Server 实现.
+    由于 gRPC/IO 对多线程下的工作支持并不友好(这是一个已知的 BUG).
+    所以我们使用 gRPC 执行器来通过 gRPC/IO 来发送任务. 避免多线程竞争问题.
+    """
+
     def xyz_get_agent_card(self, agent_id: int):
         return AgentCard(
             url=f"{self.url}/{agent_id}",
@@ -28,9 +34,6 @@ class XyzA2AServer(BaseXyzA2AServer):
     async def xyz_stream_response(
         self, agent_id: int, message: Message
     ) -> AsyncGenerator[str, None]:
-        """
-        使用 gRPC 执行器来通过 gRPC/IO 来发送任务. 避免多线程竞争问题.
-        """
         q = queue.Queue()
 
         async def _xyz_stream_response():
