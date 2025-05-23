@@ -27,7 +27,7 @@ spec:
               protocol: TCP
           env:
             - name: ENV
-              value: "${ENV}"
+              value: "prod"
           resources:
             requests:
               cpu: "500m"
