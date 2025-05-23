@@ -31,8 +31,6 @@ class A2AClient:
 
         try:
             async for chunk in self.streaming_client.stream_response(message):
-                logging.info(f"收到 streaming 信息: {chunk}")
-
                 if isinstance(chunk, dict):
                     if "content" in chunk:
                         streaming_text += chunk["content"]
