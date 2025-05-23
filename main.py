@@ -92,13 +92,14 @@ class XyzA2AServer(BaseXyzA2AServer):
                     ):
                         msg = MessageToDict(msg)
 
-                        logging.info("*" * 100)
-                        logging.info(msg)
-                        logging.info("*" * 100)
 
                         if msg["type"] == "stream_content":
                             content = msg["data"]["content"]
                             q.put(content)
+                        else:
+                            logging.info("*" * 100)
+                            logging.info(msg)
+                            logging.info("*" * 100)
 
                 except Exception as exc:
                     q.put(traceback.format_exc())
