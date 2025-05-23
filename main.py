@@ -1,3 +1,4 @@
+import time
 import asyncio
 import traceback
 import logging
@@ -54,7 +55,7 @@ class XyzA2AServer(BaseXyzA2AServer):
 
         while True:
             try:
-                item = q.get(timeout=1)
+                item = q.get(timeout=10)
 
                 if item is not None:
                     return item
@@ -68,7 +69,7 @@ class XyzA2AServer(BaseXyzA2AServer):
                 else:
                     pass
 
-            await asyncio.sleep(0.1)
+            time.sleep(0.1)
 
     async def xyz_stream_response(
         self, agent_id: int, message: Message
@@ -111,7 +112,7 @@ class XyzA2AServer(BaseXyzA2AServer):
 
         while True:
             try:
-                item = q.get(timeout=1)
+                item = q.get(timeout=10)
 
                 if item is not None:
                     yield item
