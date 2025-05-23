@@ -6,6 +6,7 @@ from google.protobuf.json_format import MessageToDict
 from core.a2a.server import (
     BaseXyzA2AServer,
     AgentCard,
+    AgentSkill,
     Message,
     AsyncGenerator,
 )
@@ -23,13 +24,47 @@ class XyzA2AServer(BaseXyzA2AServer):
     """
 
     def xyz_get_agent_card(self, agent_id: int):
-        return AgentCard(
-            url=f"{self.url}/{agent_id}",
-            name=f"XyzAgent: {agent_id}",
-            description=("From XYZ platform. Agent: {agent_id}"),
-            capabilities={"streaming": True},
-            skills=[],
-        )
+        q = queue.Queue()
+
+        async def _xyz_get_agent_card():
+            async with await RpcManager.get_agent_client(agent_id=agent_id) as agent:
+                agent_info = await agent.get_agent_info()
+                agent_description = agent_info.get("agent_description", "")
+                agent_skills = agent_info.get("skills", {})
+
+                skills = []
+                for name, info in agent_skills.items():
+                    skills.append(
+                        AgentSkill(name=name, description=info["description"])
+                    )
+
+                q.put(
+                    AgentCard(
+                        url=f"{self.url}/{agent_id}",
+                        name=f"XyzAgent: {agent_id}",
+                        description=f"From XYZ platform. Agent: {agent_id}: {agent_description}",
+                        capabilities={"streaming": True},
+                        skills=[],
+                    )
+                )
+
+        future = rpc_executor.submit_coroutine(_xyz_get_agent_card())
+
+        while True:
+            try:
+                item = q.get()
+
+                if item is not None:
+                    return item
+
+            except queue.Empty:
+                if future.done():
+                    exc = future.exception()
+                    if exc:
+                        logging.error(f"运行 rpc 执行器 err: {exc}")
+                        break
+                else:
+                    pass
 
     async def xyz_stream_response(
         self, agent_id: int, message: Message
