@@ -1,3 +1,4 @@
+import traceback
 import logging
 import queue
 
@@ -86,12 +87,17 @@ class XyzA2AServer(BaseXyzA2AServer):
                     ):
                         msg = MessageToDict(msg)
 
+                        logging.info("*" * 100)
+                        logging.info(msg)
+                        logging.info("*" * 100)
+
                         if msg["type"] == "stream_content":
                             content = msg["data"]["content"]
                             q.put(content)
                         else:
                             q.put(None)
                 except Exception as exc:
+                    q.put(traceback.format_exc())
                     q.put(None)
                     logging.error(f"生成回复时错误: {exc}")
                     raise exc
