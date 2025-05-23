@@ -42,7 +42,8 @@ class A2AClient:
                     streaming_text += str(chunk)
 
         except Exception as exc:
-            logging.error(f"收集流式信息错误: {str(exc)}")
+            streaming_text = f"No reply, err: {str(exc)}"
+            logging.error(f"收集流信息错误: {str(exc)}")
             raise exc
 
         return Message(content=TextContent(text=streaming_text), role=MessageRole.AGENT)
