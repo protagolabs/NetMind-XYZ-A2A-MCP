@@ -1,11 +1,8 @@
-import re
 import os
-import zlib
 import time
 import logging
-from typing import Optional
+import traceback
 from fastmcp import FastMCP
-from urllib.parse import urlparse
 
 import httpx
 from pydantic import Field
@@ -150,19 +147,21 @@ async def call_agent_by_agent_url(
     Returns:
         A string containing the response from the target Agent-server.
     """
+    try:
+        logging.info(f"""
+              调用 A2AClient call_agent 工具, 参数;
+                  - urL: {url}
+                  - message: {message}
+              """)
 
-    logging.info(f"""
-          调用 A2AClient call_agent 工具, 参数;
-              - urL: {url}
-              - message: {message}
-          """)
+        client = A2AClient(url=url)
 
-    client = A2AClient(url=url)
-
-    # 外部服务使用常规方式发送信息
-    response = client.send_message(message)
-    logging.info(f"{url} Response: {response}")
-    return response.content.text
+        # 外部服务使用常规方式发送信息
+        response = client.send_message(message)
+        logging.info(f"{url} Response: {response}")
+        return response.content.text
+    except Exception as exc:
+        logging.warning(f"Response err: {traceback.format_exc()}")
 
 
 @mcp.tool()
@@ -193,59 +192,64 @@ async def call_agent_by_agent_id(
     Returns:
         A string containing the response from the target Agent-server.
     """
-    agent_server_url = f"{A2A_SERVER_URL}/{to_agent_id}"
+    try:
+        agent_server_url = f"{A2A_SERVER_URL}/{to_agent_id}"
 
-    client = A2AClient(url=agent_server_url)
+        client = A2AClient(url=agent_server_url)
 
-    logging.info(f"""
-          调用 A2AClient call_agent 工具, 参数;
-              - urL: {agent_server_url}
-              - form_agent_id: {from_agent_id}
-              - to_agent_id: {to_agent_id}
-              - message: {message}
-          """)
+        logging.info(f"""
+              调用 A2AClient call_agent 工具, 参数;
+                  - urL: {agent_server_url}
+                  - form_agent_id: {from_agent_id}
+                  - to_agent_id: {to_agent_id}
+                  - message: {message}
+              """)
 
-    message_list = []
+        message_list = []
 
-    # 内部 Agent 需要带上上下文
-    message_list = await xyz_server.conversation_read(
-        user_id=from_agent_id, agent_id=to_agent_id
-    )
+        # 内部 Agent 需要带上上下文
+        message_list = await xyz_server.conversation_read(
+            user_id=from_agent_id, agent_id=to_agent_id
+        )
 
-    rest_message = {
-        "role": {"id": from_agent_id, "type": "user", "name": "Default User"},
-        "content": message,
-        "metadata": {"time": time.time()},
-    }
+        rest_message = {
+            "role": {"id": from_agent_id, "type": "user", "name": "Default User"},
+            "content": message,
+            "metadata": {"time": time.time()},
+        }
 
-    message_list.append(rest_message)
+        message_list.append(rest_message)
 
-    # 内部 Agent-Server 发送方式
-    send_message = MakeResponseModel(
-        messages_list=message_list,
-        user_id=str(from_agent_id),
-        mcp_info_list=[],
-        other_data=None,
-    )
+        # 内部 Agent-Server 发送方式
+        send_message = MakeResponseModel(
+            messages_list=message_list,
+            user_id=str(from_agent_id),
+            mcp_info_list=[],
+            other_data=None,
+        )
 
-    response: Message = await client.send_stream_message(send_message.model_dump_json())
+        response: Message = await client.send_stream_message(
+            send_message.model_dump_json()
+        )
 
-    # 内部 Agent 需要缓存历史记录
-    await xyz_server.conversation_write(
-        user_id=from_agent_id,
-        agent_id=to_agent_id,
-        message=message,
-        role="user",
-    )
-    await xyz_server.conversation_write(
-        user_id=from_agent_id,
-        agent_id=to_agent_id,
-        message=response.content.text,
-        role="assistant",
-    )
+        # 内部 Agent 需要缓存历史记录
+        await xyz_server.conversation_write(
+            user_id=from_agent_id,
+            agent_id=to_agent_id,
+            message=message,
+            role="user",
+        )
+        await xyz_server.conversation_write(
+            user_id=from_agent_id,
+            agent_id=to_agent_id,
+            message=response.content.text,
+            role="assistant",
+        )
 
-    logging.info(f"{to_agent_id} Response: {response}")
-    return response.content.text
+        logging.info(f"{to_agent_id} Response: {response}")
+        return response.content.text
+    except Exception as exc:
+        logging.warning(f"Response err: {traceback.format_exc()}")
 
 
 if __name__ == "__main__":

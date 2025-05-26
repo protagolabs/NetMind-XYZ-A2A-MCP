@@ -1,4 +1,5 @@
 import logging
+import traceback
 from python_a2a import (
     A2AClient as StandardClient,
     StreamingClient,
@@ -42,8 +43,8 @@ class A2AClient:
                     streaming_text += str(chunk)
 
         except Exception as exc:
-            streaming_text = f"No reply, err: {str(exc)}"
-            logging.error(f"收集流信息错误: {str(exc)}")
+            streaming_text = f"No reply, err: {traceback.format_exc()}"
+            logging.error(f"收集流信息错误: {traceback.format_exc()}")
             raise exc
 
         return Message(content=TextContent(text=streaming_text), role=MessageRole.AGENT)
