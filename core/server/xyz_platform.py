@@ -62,6 +62,7 @@ class XyzPlatformServer:
 
         async with aiohttp.ClientSession(
             base_url=self.base_url,
+            headers={"access-api-key": EnvHelper.get_access_api_key()},
             timeout=aiohttp.ClientTimeout(EnvHelper.get_http_timeout()),
         ) as client:
             async with client.post(

@@ -64,3 +64,7 @@ class EnvHelper:
             timeout = int(timeout)
 
         return timeout
+
+    @classmethod
+    def get_access_api_key(cls) -> str:
+        return os.getenv("ACCESS_API_KEY", "xyz_access_api_key_4345kfd8")
