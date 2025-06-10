@@ -11,8 +11,8 @@ from python_a2a import (
 
 class A2AClient:
     def __init__(self, url: str):
-        self.standard_client = StandardClient(url)
-        self.streaming_client = StreamingClient(url)
+        self.standard_client = StandardClient(url, timeout=60)
+        self.streaming_client = StreamingClient(url, timeout=60)
 
     def send_message(self, message: str) -> str:
         message = Message(
