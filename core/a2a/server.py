@@ -14,6 +14,7 @@ from typing import Any, AsyncGenerator, Union
 
 from python_a2a.server import A2AServer
 from python_a2a.models import AgentCard, AgentSkill
+from python_a2a.server.http import create_flask_app
 from python_a2a.models import TaskState, TaskStatus
 from python_a2a.models.message import Message
 from python_a2a.models.conversation import Conversation
@@ -621,6 +622,56 @@ class BaseXyzA2AServer(A2AServer):
             except Exception as e:
                 # Return error response for any other exception
                 return jsonify({"error": str(e)}), 500
+
+        @app.route("/<int:agent_id>", methods=["POST"])
+        def handle_a2a_root_post(agent_id: int):
+            g.agent_id = agent_id
+
+            try:
+                data = request.json
+
+                # First, detect if this is Google A2A format (has 'parts' field)
+                is_google_format = False
+                if "parts" in data and "role" in data and "content" not in data:
+                    is_google_format = True
+
+                # Check if it's a task
+                if "id" in data and ("message" in data or "status" in data):
+                    return self._handle_task_request(data, is_google_format)
+
+                # Check if this is a conversation (has 'messages' field)
+                if "messages" in data:
+                    # Check first message format to determine if Google A2A format
+                    if (
+                        data["messages"]
+                        and "parts" in data["messages"][0]
+                        and "role" in data["messages"][0]
+                    ):
+                        is_google_format = True
+                    return self._handle_conversation_request(data, is_google_format)
+
+                # Handle as a single message
+                return self._handle_message_request(data, is_google_format)
+
+            except Exception as e:
+                # Return an error response in appropriate format
+                error_msg = f"Error processing request: {str(e)}"
+                if self._use_google_a2a:
+                    # Return error in Google A2A format
+                    return jsonify(
+                        {
+                            "role": "agent",
+                            "parts": [{"type": "data", "data": {"error": error_msg}}],
+                        }
+                    ), 500
+                else:
+                    # Return error in python_a2a format
+                    return jsonify(
+                        {
+                            "content": {"type": "error", "message": error_msg},
+                            "role": "system",
+                        }
+                    ), 500
 
         @app.route("/<int:agent_id>/a2a", methods=["POST"])
         def handle_a2a_request(agent_id: int) -> Union[Response, tuple]:
